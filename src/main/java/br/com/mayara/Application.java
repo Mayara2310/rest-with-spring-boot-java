@@ -1,4 +1,4 @@
-package Controller;
+package br.com.mayara;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
