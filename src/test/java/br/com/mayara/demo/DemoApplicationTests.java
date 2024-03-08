@@ -1,4 +1,4 @@
-package com.example.demo;
+package br.com.mayara.demo;
 
 import org.junit.jupiter.api.Test;
 

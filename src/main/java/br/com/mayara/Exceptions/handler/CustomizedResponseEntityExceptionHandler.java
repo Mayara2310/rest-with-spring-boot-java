@@ -1,7 +1,7 @@
 package br.com.mayara.Exceptions.handler;
 
 import br.com.mayara.Exceptions.ExceptionsResponse;
-import br.com.mayara.Exceptions.UnsupportedMathOperationException;
+import br.com.mayara.Exceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -28,8 +28,8 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
         return new ResponseEntity<>(exceptionResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(UnsupportedMathOperationException.class)
-    public final ResponseEntity<ExceptionsResponse> handleBadRequestExceptions(
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public final ResponseEntity<ExceptionsResponse> handleNotFoundExceptions(
             Exception ex, WebRequest request) {
 
         ExceptionsResponse exceptionResponse = new ExceptionsResponse(
@@ -37,7 +37,7 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
                 ex.getMessage(),
                 request.getDescription(false));
 
-        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
     }
 
 }

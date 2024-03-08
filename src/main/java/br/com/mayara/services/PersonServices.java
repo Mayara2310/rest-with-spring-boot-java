@@ -1,65 +1,73 @@
 package br.com.mayara.services;
 
+import br.com.mayara.Exceptions.ResourceNotFoundException;
+import br.com.mayara.data.vo.v1.PersonVO;
+import br.com.mayara.mapper.DozerMapper;
 import br.com.mayara.model.Person;
+import br.com.mayara.repositories.PersonRepository;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.IntStream;
 
 @Log4j2
 @Service
 public class PersonServices {
 
-    private final AtomicLong counter = new AtomicLong();//Mockar um id
+//    private final AtomicLong counter = new AtomicLong();//Mockar um id
 //    private Logger logger = Logger.getLogger(PersonServices.class.getName()); @Sl4j
 
-    public List<Person> findAll(){
+    @Autowired
+    PersonRepository personRepository;
+
+    public List<PersonVO> findAll() {
         log.info("Finding all people");
 
-        List<Person> persons = new ArrayList<>();
-        for (int i : IntStream.range(0, 8).toArray()){
-            persons.add(mockPersons(i));
-        }
-        return persons;
+        return DozerMapper.parseListObjects(personRepository.findAll(), PersonVO.class);
     }
 
-    public Person create(Person person){
+    public PersonVO findById(Long id){
+        log.info("Finding one person");
+        var entity = personRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No records founf for this ID"));
+        return DozerMapper.parseObject(entity, PersonVO.class);
+    }
+
+    public PersonVO create(PersonVO person) {
         log.info("Creating one person");
-        return person;
+        var entity = DozerMapper.parseObject(person, Person.class);
+        var vo = DozerMapper.parseObject(personRepository.save(entity), PersonVO.class);
+        return vo;
     }
 
-    public Person update(Person person){
+//    public PersonVO2 createV2(PersonVO2 personVO2) {
+//        log.info("Creatig one person with V2");
+//        var entity2 = personMapper.convertToVoEntity(personVO2);
+//        var vo = personMapper.convertEntityToVo(personRepository.save(entity2));
+//        return vo;
+//    }
+
+    public PersonVO update(PersonVO person) {
         log.info("Updating one person");
-        return person;
+        var entity = personRepository.findById(person.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+        entity.setFirstName(person.getFirstName());
+        entity.setLastName(person.getLastName());
+        entity.setAddress(person.getAddress());
+        entity.setGender(person.getGender());
+        var vo = DozerMapper.parseObject(personRepository.save(entity), PersonVO.class);
+
+        return vo;
     }
 
-    public void delete(String id){
+    public void delete(Long id) {
         log.info("Deleting one person");
 
-    }
-    public Person findById(String id){
-        log.info("Finding one person");
-        Person person = new Person();
-        person.setId(counter.incrementAndGet());
-        person.setFirstName("Mayara");
-        person.setLastName("Villa");
-        person.setAddress("Ipiranga");
-        person.setGender("Male");
-        return person;
+        Person entity = personRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+        personRepository.delete(entity);
     }
 
-    private Person mockPersons(int i) {
-        log.info("Finding all people");
-        Person person = new Person();
-        person.setId(counter.incrementAndGet());
-        person.setFirstName("FirstName");
-        person.setLastName("LastName");
-        person.setAddress("Brasil");
-        person.setGender("Male");
-        return person;
-    }
 
 }
