@@ -1,16 +1,23 @@
 package br.com.mayara.services;
 
+import br.com.mayara.Exceptions.RequiredObjectIsNullException;
 import br.com.mayara.Exceptions.ResourceNotFoundException;
-import br.com.mayara.data.vo.v1.PersonVO;
-import br.com.mayara.mapper.DozerMapper;
+import br.com.mayara.controller.PersonController;
+import br.com.mayara.data.vo.PersonVO;
+import br.com.mayara.DozerMapper;
 import br.com.mayara.model.Person;
 import br.com.mayara.repositories.PersonRepository;
+import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
+@Data
 @Log4j2
 @Service
 public class PersonServices {
@@ -24,20 +31,28 @@ public class PersonServices {
     public List<PersonVO> findAll() {
         log.info("Finding all people");
 
-        return DozerMapper.parseListObjects(personRepository.findAll(), PersonVO.class);
+        var persons = DozerMapper.parseListObjects(personRepository.findAll(), PersonVO.class);
+        persons.stream()
+                .forEach(p -> p.add(linkTo(methodOn(PersonController.class)
+                        .findById(p.getKey())).withSelfRel()));
+        return persons;
     }
 
     public PersonVO findById(Long id){
         log.info("Finding one person");
         var entity = personRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No records founf for this ID"));
-        return DozerMapper.parseObject(entity, PersonVO.class);
+        PersonVO vo = DozerMapper.parseObject(entity, PersonVO.class);
+        vo.add(linkTo(methodOn(PersonController.class).findById(id)).withSelfRel());
+        return vo;
     }
 
     public PersonVO create(PersonVO person) {
+        if (person == null) throw new RequiredObjectIsNullException();
         log.info("Creating one person");
         var entity = DozerMapper.parseObject(person, Person.class);
-        var vo = DozerMapper.parseObject(personRepository.save(entity), PersonVO.class);
+        PersonVO vo = DozerMapper.parseObject(personRepository.save(entity), PersonVO.class);
+        vo.add(linkTo(methodOn(PersonController.class).findById(vo.getKey())).withSelfRel());
         return vo;
     }
 
@@ -49,15 +64,16 @@ public class PersonServices {
 //    }
 
     public PersonVO update(PersonVO person) {
+        if (person == null) throw new RequiredObjectIsNullException();
         log.info("Updating one person");
-        var entity = personRepository.findById(person.getId())
+        var entity = personRepository.findById(person.getKey())
                 .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
         entity.setFirstName(person.getFirstName());
         entity.setLastName(person.getLastName());
         entity.setAddress(person.getAddress());
         entity.setGender(person.getGender());
         var vo = DozerMapper.parseObject(personRepository.save(entity), PersonVO.class);
-
+        vo.add(linkTo(methodOn(PersonController.class).findById(vo.getKey())).withSelfRel());
         return vo;
     }
 

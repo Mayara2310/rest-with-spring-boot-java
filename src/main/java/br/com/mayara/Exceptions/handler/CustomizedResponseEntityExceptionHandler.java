@@ -1,6 +1,7 @@
 package br.com.mayara.Exceptions.handler;
 
 import br.com.mayara.Exceptions.ExceptionsResponse;
+import br.com.mayara.Exceptions.RequiredObjectIsNullException;
 import br.com.mayara.Exceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,18 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
                 request.getDescription(false));
 
         return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RequiredObjectIsNullException.class)
+    public final ResponseEntity<ExceptionsResponse> handleBadRequestExceptions(
+            Exception ex, WebRequest request) {
+
+        ExceptionsResponse exceptionResponse = new ExceptionsResponse(
+                new Date(),
+                ex.getMessage(),
+                request.getDescription(false));
+
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
 
 }
